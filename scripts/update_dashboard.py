@@ -291,7 +291,20 @@ media_mensal = round(sum(adesao_list) / len(adesao_list), 1)
 acumulado_2026 = sum(adesao_list)
 
 # Vendas por consultor
-adesao_2026['regional'] = adesao_2026['regional'].fillna('Venda Direta (Site)')
+def clean_consultor_name(name):
+    if pd.isna(name):
+        return 'Venda Direta'
+    name_str = str(name).strip()
+    name_upper = name_str.upper()
+    if 'SAMUEL HENRIQUE ALVES' in name_upper:
+        return 'Samuel Souza'
+    if 'BIANCA TEIXEIRA' in name_upper:
+        return 'Bianca Silva'
+    if 'VENDA DIRETA' in name_upper or name_upper == 'NULL' or name_upper == '':
+        return 'Venda Direta'
+    return name_str
+
+adesao_2026['regional'] = adesao_2026['regional'].apply(clean_consultor_name)
 consultor_counts = adesao_2026['regional'].value_counts()
 vendas_por_consultor = []
 total_vendas_consultor = len(adesao_2026)
@@ -304,7 +317,7 @@ for c_name, count in consultor_counts.items():
 
 # Inclusões por consultor no mês de referência
 current_period_inclusions_copy = current_period_inclusions.copy()
-current_period_inclusions_copy['consultor_clean'] = current_period_inclusions_copy['regional'].fillna('Venda Direta (Site)')
+current_period_inclusions_copy['consultor_clean'] = current_period_inclusions_copy['regional'].apply(clean_consultor_name)
 consultor_period = current_period_inclusions_copy.groupby(['consultor_clean', 'tipo_contrato']).agg(
     inclusoes=('tipo_contrato', 'size'),
     valor=('total_geral', 'sum')
@@ -329,35 +342,30 @@ inclusoes_junho_por_consultor = {
     "valor_total": round(current_period_inclusions['total_geral'].sum(), 1)
 }
 
-# Detalhe de inclusões
-detail_items = []
-for row in current_period_inclusions.to_dict('records'):
-    detail_items.append({
-        "tipo": row['tipo_contrato'],
-        "vigencia": row['dtvigencia_benef'],
-        "contratante": row['nome'],
-        "consultor": "null" if pd.isna(row['regional']) and row['tipo_contrato'] == 'ADESÃO' else (row['regional'] if pd.notna(row['regional']) else "Venda Direta (Site)"),
-        "tipo_descricao": row['tipo_descricao'],
-        "tipo_beneficiario": row['tipo_segurado'],
-        "beneficiario": row['nome_segurado'],
-        "cpf_cnpj": row['cpf_segurado'],
-        "valor": round(row['total_geral'], 1)
-    })
-def parse_vig_date(item):
-    try:
-        return datetime.strptime(item['vigencia'], '%d/%m/%Y')
-    except:
-        return datetime.min
-detail_items = sorted(detail_items, key=parse_vig_date)
 
-inclusoes_junho_detalhe = {
-    "mes_ref": inclusoes_junho_obs,
-    "itens": detail_items,
-    "valor_total": round(current_period_inclusions['total_geral'].sum(), 1)
-}
+# Composição da carteira por produto (vidas ativas)
+portfolio_product_counts = active_df['tipo_descricao'].value_counts()
+carteira_por_produto_items = []
+top_4_active_prods = portfolio_product_counts.index.tolist()[:4]
+for prod in top_4_active_prods:
+    count = portfolio_product_counts[prod]
+    carteira_por_produto_items.append({
+        "produto": str(prod).upper(),
+        "vidas": int(count),
+        "pct": round((count / vidas_ativas) * 100, 1) if vidas_ativas > 0 else 0.0
+    })
+others_active_count = sum(portfolio_product_counts[p] for p in portfolio_product_counts.index if p not in top_4_active_prods)
+if others_active_count > 0:
+    carteira_por_produto_items.append({
+        "produto": "DEMAIS PRODUTOS",
+        "vidas": int(others_active_count),
+        "pct": round((others_active_count / vidas_ativas) * 100, 1) if vidas_ativas > 0 else 0.0
+    })
 
 pagina1_data = {
     "titulo": "VISÃO EXECUTIVA - CARTEIRA DE BENEFICIÁRIOS",
+    "carteira_por_produto": carteira_por_produto_items,
+    "carteira_por_produto_total": vidas_ativas,
     "kpis": {
         "vidas_ativas": vidas_ativas,
         "empresarial": empresarial,
@@ -390,7 +398,7 @@ pagina1_data = {
     "vendas_por_consultor": vendas_por_consultor,
     "vendas_por_consultor_total": total_vendas_consultor,
     "inclusoes_junho_por_consultor": inclusoes_junho_por_consultor,
-    "inclusoes_junho_detalhe": inclusoes_junho_detalhe,
+
     "mensagem_diretoria": f"A DR. HOJE finaliza o período com {vidas_ativas} vidas ativas na carteira (Adesão: {adesao} | PJ: {empresarial})."
 }
 
