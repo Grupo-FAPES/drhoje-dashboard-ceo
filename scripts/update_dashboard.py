@@ -164,18 +164,20 @@ adesao = len(active_df[active_df['tipo_contrato'] == 'ADESÃO'])
 empresarial_pct = round((empresarial / vidas_ativas) * 100, 1) if vidas_ativas > 0 else 0.0
 adesao_pct = round((adesao / vidas_ativas) * 100, 1) if vidas_ativas > 0 else 0.0
 
-# Current period (last two months, e.g. June + July 2026)
-current_period_keys = [months_keys[-2], months_keys[-1]] if len(months_keys) >= 2 else [months_keys[-1]]
+# Current period (current month, e.g. July 2026)
+current_period_keys = [months_keys[-1]]
 current_period_inclusions = df_contratos[df_contratos['mes_ano_inclusao'].isin(current_period_keys)]
 inclusoes_junho = len(current_period_inclusions)
 
-obs_period_name = f"{month_names_pt[len(months_keys)-2].capitalize()}+{month_names_pt[len(months_keys)-1].capitalize()}" if len(months_keys) >= 2 else month_names_pt[len(months_keys)-1].capitalize()
-inclusoes_junho_obs = f"{obs_period_name}/2026 (até {today.strftime('%d/%m')})"
+obs_period_name = month_names_pt[len(months_keys)-1].capitalize()
+inclusoes_junho_obs = f"{obs_period_name}/{today.strftime('%Y')} (até {today.strftime('%d/%m/%Y')})"
+inclusoes_titulo = f"INCLUSÕES EM {month_names_pt[len(months_keys)-1].upper()}"
 
 # Inclusoes por dia no periodo
 daily_df = current_period_inclusions.copy()
 daily_df['date_parsed'] = pd.to_datetime(daily_df['dtvigencia_benef'], format='%d/%m/%Y', errors='coerce')
 daily_df = daily_df.dropna(subset=['date_parsed'])
+daily_df = daily_df[daily_df['date_parsed'] <= today]
 daily_grouped = daily_df.groupby('date_parsed').size().reset_index(name='valor')
 daily_grouped = daily_grouped.sort_values('date_parsed')
 daily_grouped['dia'] = daily_grouped['date_parsed'].dt.strftime('%d/%m')
@@ -373,7 +375,8 @@ pagina1_data = {
         "adesao": adesao,
         "adesao_pct": adesao_pct,
         "inclusoes_junho": inclusoes_junho,
-        "inclusoes_junho_obs": inclusoes_junho_obs
+        "inclusoes_junho_obs": inclusoes_junho_obs,
+        "inclusoes_titulo": inclusoes_titulo
     },
     "composicao_carteira": {
         "empresarial": empresarial,
