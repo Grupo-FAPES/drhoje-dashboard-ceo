@@ -293,16 +293,16 @@ acumulado_2026 = sum(adesao_list)
 # Vendas por consultor
 def clean_consultor_name(name):
     if pd.isna(name):
-        return 'Venda Direta'
+        return 'VENDA DIRETA'
     name_str = str(name).strip()
     name_upper = name_str.upper()
     if 'SAMUEL HENRIQUE ALVES' in name_upper:
-        return 'Samuel Souza'
+        return 'SAMUEL SOUZA'
     if 'BIANCA TEIXEIRA' in name_upper:
-        return 'Bianca Silva'
+        return 'BIANCA SILVA'
     if 'VENDA DIRETA' in name_upper or name_upper == 'NULL' or name_upper == '':
-        return 'Venda Direta'
-    return name_str
+        return 'VENDA DIRETA'
+    return name_upper
 
 adesao_2026['regional'] = adesao_2026['regional'].apply(clean_consultor_name)
 consultor_counts = adesao_2026['regional'].value_counts()
