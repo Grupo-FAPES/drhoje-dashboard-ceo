@@ -7,6 +7,7 @@ echo ========================================================
 cd /d "%~dp0"
 
 set GITHUB_TOKEN=
+set GH_TOKEN=
 
 gh workflow run update_data.yml --repo Grupo-FAPES/drhoje-dashboard-ceo
 
@@ -19,7 +20,7 @@ if %ERRORLEVEL% EQU 0 (
     echo ========================================================
     echo.
     echo Aguardando 45 segundos para baixar o resultado...
-    timeout /t 45
+    powershell -Command "Start-Sleep -Seconds 45"
     git pull
 ) else (
     echo.
@@ -29,4 +30,4 @@ if %ERRORLEVEL% EQU 0 (
     echo ========================================================
 )
 
-timeout /t 5
+powershell -Command "Start-Sleep -Seconds 5"
