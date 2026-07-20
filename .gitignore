@@ -4,3 +4,4 @@ scripts/test_connection.py
 __pycache__/
 *.log
 .env
+disparar_workflow.bat
