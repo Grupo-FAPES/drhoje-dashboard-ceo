@@ -1,4 +1,4 @@
-# DR. HOJE — Dashboard Executivo de Vendas & Faturamento
+# DR. HOJE CEO — Dashboard Executivo de Vendas & Faturamento
 
 Este repositório contém o painel estático interativo de indicadores da **DR. HOJE**, com foco no acompanhamento da carteira de beneficiários (vidas ativas), movimentação (inclusões e exclusões), distribuição por produtos e visão consolidada de faturamento (receita gerada vs. paga).
 

@@ -1,6 +1,12 @@
 name: Update Dashboard Data
 
 on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'index.html'
+      - 'dashboard_dr_hoje.html'
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
